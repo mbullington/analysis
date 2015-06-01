@@ -1,9 +1,4 @@
-library analysis.src.resolver;
-
-import 'dart:io';
-
-import 'package:analyzer/src/generated/java_io.dart';
-import 'package:analyzer/src/generated/source_io.dart';
+part of analysis;
 
 /// A source code file resolver.
 class SourceResolver implements Function {

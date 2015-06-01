@@ -1,6 +1,6 @@
 library analysis.test.resolver_test;
 
-import 'package:analysis/src/crawler.dart';
+import 'package:analysis/analysis.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -10,13 +10,12 @@ void main() {
     test('can run on test_data.dart', () async {
       final librariesLoaded =
           sourceCrawler('package:analysis/src/test_data/test_data.dart')
-            .map((LibraryTuple library) => library.packageUri)
+            .map((LibraryTuple library) => library.name)
             .toList();
 
       expect(librariesLoaded, [
-        'package:analysis/src/test_data/test_data.dart',
-        'dart:collection',
-        'package:analysis/src/test_data/test_import.dart'
+        'test_data',
+        'test_import'
       ]);
     });
   });

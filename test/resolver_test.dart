@@ -2,7 +2,7 @@ library analysis.test.resolver_test;
 
 import 'dart:io';
 
-import 'package:analysis/src/resolver.dart';
+import 'package:analysis/analysis.dart';
 import 'package:test/test.dart';
 
 void main() {
@@ -13,7 +13,7 @@ void main() {
       final path = sourceResolver('package:analysis/src/resolver.dart');
       expect(path, endsWith('resolver.dart'));
       final String file = await new File(path).readAsString();
-      expect(file, startsWith('library analysis.src.resolver;'));
+      expect(file, startsWith('part of analysis;'));
     });
   });
 }
