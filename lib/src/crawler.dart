@@ -6,11 +6,18 @@ class LibraryTuple {
   final String path;
   final String packageUri;
 
+  List<CompilationUnit> parts = [];
+
+  List<CompilationUnit> get astUnits =>
+    []..addAll(parts)..add(astUnit);
+
   String get name {
     String name;
     astUnit.directives
-      .where((e) => e is PartOfDirective || e is LibraryDirective)
-      .forEach((e) => name = e is PartOfDirective ? e.libraryName.name : e.name.name);
+      .where((e) => e is LibraryDirective)
+      .forEach((e) {
+        name = e.name.name;
+      });
     return name;
   }
 
@@ -63,13 +70,22 @@ class _SourceCrawler implements SourceCrawler {
 
     var lib = new LibraryTuple._(astUnit, path);
 
+    astUnit.directives
+      .where((directive) => directive is PartDirective)
+      .forEach((UriBasedDirective import) {
+        final path = _getFileLocation(import.uri.stringValue, lib.path);
+        if(path != null) {
+          lib.parts.addAll(this.crawl(path, true));
+        }
+      });
+
     final results = <LibraryTuple>[];
     results.add(lib);
 
     astUnit.directives
       .where((directive) =>
-        deep ? directive is ExportDirective || directive is PartDirective:
-        directive is ImportDirective || directive is ExportDirective || directive is PartDirective)
+        deep ? directive is ExportDirective:
+        directive is ImportDirective || directive is ExportDirective)
       .forEach((UriBasedDirective import) {
         final path = _getFileLocation(import.uri.stringValue, lib.path);
         if(path != null) {

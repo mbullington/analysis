@@ -8,15 +8,22 @@ void main() {
     final sourceCrawler = new SourceCrawler();
 
     test('can run on test_data.dart', () async {
+      var crawler = sourceCrawler('package:analysis/src/test_data/test_data.dart');
       final librariesLoaded =
-          sourceCrawler('package:analysis/src/test_data/test_data.dart')
+            crawler
             .map((LibraryTuple library) => library.name)
             .toList();
+
+      print(crawler[0].path);
+      expect(crawler[0].name, 'test_data');
 
       expect(librariesLoaded, [
         'test_data',
         'test_import'
       ]);
+
+      expect(crawler[0].parts.length, 1);
+      expect(crawler[0].astUnits.length, 2);
     });
   });
 }
