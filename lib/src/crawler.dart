@@ -75,7 +75,7 @@ class _SourceCrawler implements SourceCrawler {
       .forEach((UriBasedDirective import) {
         final path = _getFileLocation(import.uri.stringValue, lib.path);
         if(path != null) {
-          lib.parts.addAll(this.crawl(path, true));
+          lib.parts.addAll(this.crawl(path, true).map((l) => l.astUnit));
         }
       });
 
