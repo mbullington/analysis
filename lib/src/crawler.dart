@@ -30,7 +30,7 @@ abstract class SourceCrawler implements Function {
       bool includeDefaultPackageRoot: true,
       List<String> packageRoots,
       bool preserveComments: false,
-      List<String> allowedDartPaths}) =>
+      List<String> allowedDartPaths: const []}) =>
           new _SourceCrawler(analyzeFunctionBodies, includeDefaultPackageRoot, packageRoots, preserveComments, allowedDartPaths);
 
   /// Resolves and crawls [path], and all files imported (recursively). Returns
