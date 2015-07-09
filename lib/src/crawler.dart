@@ -29,7 +29,9 @@ abstract class SourceCrawler implements Function {
       bool analyzeFunctionBodies: false,
       bool includeDefaultPackageRoot: true,
       List<String> packageRoots,
-      bool preserveComments: false}) => new _SourceCrawler(analyzeFunctionBodies, includeDefaultPackageRoot, packageRoots, preserveComments);
+      bool preserveComments: false,
+      List<String> allowedDartPaths}) =>
+          new _SourceCrawler(analyzeFunctionBodies, includeDefaultPackageRoot, packageRoots, preserveComments, allowedDartPaths);
 
   /// Resolves and crawls [path], and all files imported (recursively). Returns
   /// an [Iterable] of all the ASTs parsed.
@@ -42,11 +44,14 @@ class _SourceCrawler implements SourceCrawler {
   final Map<String, LibraryTuple> _libraries = {};
   final SourceResolver _sourceResolver;
 
+  final List<String> allowedDartPaths;
+
   factory _SourceCrawler(
       bool analyzeFunctionBodies,
       bool includeDefaultPackageRoot,
       List<String> packageRoots,
-      bool preserveComments) {
+      bool preserveComments,
+      List<String> allowedDartPaths) {
     if (packageRoots == null) {
       packageRoots = [Platform.packageRoot];
     }
@@ -55,10 +60,10 @@ class _SourceCrawler implements SourceCrawler {
     final sourceResolver = new SourceResolver.fromPackageRoots(
         packageRoots, includeDefaultPackageRoot);
 
-    return new _SourceCrawler._(sourceResolver);
+    return new _SourceCrawler._(sourceResolver, allowedDartPaths);
   }
 
-  _SourceCrawler._(this._sourceResolver);
+  _SourceCrawler._(this._sourceResolver, [this.allowedDartPaths = const []]);
 
   /// Crawls, starting at [path], invoking [crawlFile] for each file.
   @override
@@ -104,7 +109,7 @@ class _SourceCrawler implements SourceCrawler {
   }
 
   String _getFileLocation(String uri, [String relativeTo]) {
-    if (uri == null) {
+    if (uri == null || (uri.startsWith("dart:") && !allowedDartPaths.contains(uri))) {
       return null;
     } else if (uri.startsWith("package:") || uri.startsWith("dart:")) {
       return _sourceResolver(uri);
