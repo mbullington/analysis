@@ -19,6 +19,7 @@ void main() {
 
       expect(librariesLoaded, [
         'test_data',
+        'dart.collection',
         'test_import'
       ]);
 

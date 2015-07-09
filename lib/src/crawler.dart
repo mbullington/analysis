@@ -39,6 +39,7 @@ abstract class SourceCrawler implements Function {
 /// A source code crawler.
 class _SourceCrawler implements SourceCrawler {
   final SourceResolver _sourceResolver;
+  AnalysisContext _context;
 
   factory _SourceCrawler(
       bool analyzeFunctionBodies,
@@ -97,9 +98,9 @@ class _SourceCrawler implements SourceCrawler {
   }
 
   String _getFileLocation(String uri, [String relativeTo]) {
-    if (uri == null || uri.startsWith('dart:')) {
+    if (uri == null) {
       return null;
-    } else if (uri.startsWith('package:')) {
+    } else if (uri.startsWith("package:") || uri.startsWith("dart:")) {
       return _sourceResolver(uri);
     } else {
       if(relativeTo != null)
