@@ -34,12 +34,12 @@ abstract class SourceCrawler implements Function {
   /// Resolves and crawls [path], and all files imported (recursively). Returns
   /// an [Iterable] of all the ASTs parsed.
   Iterable<LibraryTuple> call(String path);
+  Iterable<LibraryTuple> crawl(String entryPointLocation, [bool deep = false]);
 }
 
 /// A source code crawler.
 class _SourceCrawler implements SourceCrawler {
   final SourceResolver _sourceResolver;
-  AnalysisContext _context;
 
   factory _SourceCrawler(
       bool analyzeFunctionBodies,
@@ -85,7 +85,7 @@ class _SourceCrawler implements SourceCrawler {
 
     astUnit.directives
       .where((directive) =>
-        deep ? directive is ExportDirective:
+        deep ? directive is ExportDirective :
         directive is ImportDirective || directive is ExportDirective)
       .forEach((UriBasedDirective import) {
         final path = _getFileLocation(import.uri.stringValue, lib.path);
