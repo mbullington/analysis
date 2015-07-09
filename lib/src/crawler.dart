@@ -86,6 +86,7 @@ class _SourceCrawler implements SourceCrawler {
         });
 
       results.add(lib);
+      _libraries[path] = lib;
     }
 
     results.first.astUnit.directives
