@@ -39,6 +39,7 @@ abstract class SourceCrawler implements Function {
 
 /// A source code crawler.
 class _SourceCrawler implements SourceCrawler {
+  final Map<String, LibraryTuple> _libraries = {};
   final SourceResolver _sourceResolver;
 
   factory _SourceCrawler(
@@ -67,28 +68,32 @@ class _SourceCrawler implements SourceCrawler {
 
   Iterable<LibraryTuple> crawl(String entryPointLocation, [bool deep = false]) {
     final path = _getFileLocation(entryPointLocation);
-    final astUnit = parseDartFile(path);
-
-    var lib = new LibraryTuple._(astUnit, path);
-
-    astUnit.directives
-      .where((directive) => directive is PartDirective)
-      .forEach((UriBasedDirective import) {
-        final path = _getFileLocation(import.uri.stringValue, lib.path);
-        if(path != null) {
-          lib.parts.addAll(this.crawl(path, true).map((l) => l.astUnit));
-        }
-      });
-
     final results = <LibraryTuple>[];
-    results.add(lib);
 
-    astUnit.directives
+    if(_libraries.containsKey(path)) {
+      results.add(_libraries[path]);
+    } else {
+      final astUnit = parseDartFile(path);
+      var lib = new LibraryTuple._(astUnit, path);
+
+      astUnit.directives
+        .where((directive) => directive is PartDirective)
+        .forEach((UriBasedDirective import) {
+          final path = _getFileLocation(import.uri.stringValue, lib.path);
+          if(path != null) {
+            lib.parts.addAll(this.crawl(path, true).map((l) => l.astUnit));
+          }
+        });
+
+      results.add(lib);
+    }
+
+    results.first.astUnit.directives
       .where((directive) =>
         deep ? directive is ExportDirective :
         directive is ImportDirective || directive is ExportDirective)
       .forEach((UriBasedDirective import) {
-        final path = _getFileLocation(import.uri.stringValue, lib.path);
+        final path = _getFileLocation(import.uri.stringValue, results.first.path);
         if(path != null) {
           results.addAll(this.crawl(path, true));
         }
