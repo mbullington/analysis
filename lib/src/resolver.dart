@@ -2,7 +2,8 @@ part of analysis;
 
 /// A source code file resolver.
 class SourceResolver implements Function {
-  static final _defaultPackageRoots = [Platform.packageRoot];
+  static final _defaultPackageRoots = Platform.packageRoot == null ?
+      const [] : [Platform.packageRoot];
   static const _filePrefix = "file:/";
 
   final SourceFactory _factory;
