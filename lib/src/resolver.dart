@@ -24,12 +24,14 @@ class SourceResolver implements Function {
     return new SourceResolver._(_createResolver(concatPackageRoots));
   }
 
-  SourceResolver._(PackageUriResolver packageUriResolver):
-    _factory = new SourceFactory([packageUriResolver,
+  SourceResolver._(PackageMapUriResolver packageUriResolver):
+    _factory = new SourceFactory([
+        new ResourceUriResolver(PhysicalResourceProvider.INSTANCE),
+        packageUriResolver,
         new DartUriResolver(DirectoryBasedDartSdk.defaultSdk)]);
 
   /// Resolve and returns [path]. For example:
-  ///     // Returns (for example) /home/ubuntu/user/libs/analysis/analysis.dart
+  ///     Returns (for example) /home/ubuntu/user/libs/analysis/analysis.dart
   ///     resolver("package:analysis/analysis.dart")
   String call(String path) {
     // Translate path to an absolute path.
@@ -46,10 +48,17 @@ class SourceResolver implements Function {
   }
 
   /// Creates and returns a URI resolver.
-  static PackageUriResolver _createResolver([Iterable<String> packageRoots]) {
-    final packageRootResolvers = packageRoots.map((packageRoot) {
-      return new JavaFile.fromUri(new Uri.file(packageRoot));
-    }).toList(growable: false);
-    return new PackageUriResolver(packageRootResolvers);
+  static PackageMapUriResolver _createResolver([Iterable<String> packageRoots]) {
+    packageRoots ??= _defaultPackageRoots;
+
+    var resourceProvider = PhysicalResourceProvider.INSTANCE;
+    ContextBuilder builder = new ContextBuilder(resourceProvider, null, null);
+
+    if (packageRoots.length != 0) {
+      builder.defaultPackageFilePath = new JavaFile.fromUri(new Uri.file(packageRoots.first)).getAbsolutePath() + "/.packages";
+    }
+
+    return new PackageMapUriResolver(resourceProvider,
+        builder.convertPackagesToMap(builder.createPackageMap('')));
   }
 }
