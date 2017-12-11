@@ -3,6 +3,8 @@ part of analysis;
 class LibraryTuple {
   final CompilationUnit astUnit;
 
+  final List<LibraryTuple> imports = [];
+
   final String path;
   final String packageUri;
 
@@ -30,8 +32,9 @@ abstract class SourceCrawler implements Function {
       bool includeDefaultPackageRoot: true,
       List<String> packageRoots,
       bool preserveComments: false,
+      List<String> librariesToInclude: const [],
       List<String> allowedDartPaths: const []}) =>
-          new _SourceCrawler(analyzeFunctionBodies, includeDefaultPackageRoot, packageRoots, preserveComments, allowedDartPaths);
+          new _SourceCrawler(analyzeFunctionBodies, includeDefaultPackageRoot, packageRoots, preserveComments, librariesToInclude, allowedDartPaths);
 
   /// Resolves and crawls [path], and all files imported (recursively). Returns
   /// an [Iterable] of all the ASTs parsed.
@@ -44,6 +47,7 @@ class _SourceCrawler implements SourceCrawler {
   final Map<String, LibraryTuple> _libraries = {};
   final SourceResolver _sourceResolver;
 
+  final List<String> librariesToInclude;
   final List<String> allowedDartPaths;
 
   factory _SourceCrawler(
@@ -51,6 +55,7 @@ class _SourceCrawler implements SourceCrawler {
       bool includeDefaultPackageRoot,
       List<String> packageRoots,
       bool preserveComments,
+      List<String> librariesToInclude,
       List<String> allowedDartPaths) {
     if (packageRoots == null) {
       packageRoots = [Platform.packageRoot];
@@ -60,10 +65,10 @@ class _SourceCrawler implements SourceCrawler {
     final sourceResolver = new SourceResolver.fromPackageRoots(
         packageRoots, includeDefaultPackageRoot);
 
-    return new _SourceCrawler._(sourceResolver, allowedDartPaths);
+    return new _SourceCrawler._(sourceResolver, librariesToInclude, allowedDartPaths);
   }
 
-  _SourceCrawler._(this._sourceResolver, [this.allowedDartPaths = const []]);
+  _SourceCrawler._(this._sourceResolver, [this.librariesToInclude = const [], this.allowedDartPaths = const []]);
 
   /// Crawls, starting at [path], invoking [crawlFile] for each file.
   @override
@@ -73,13 +78,18 @@ class _SourceCrawler implements SourceCrawler {
 
   Iterable<LibraryTuple> crawl(String entryPointLocation, [bool deep = false]) {
     final path = _getFileLocation(entryPointLocation);
+    LibraryTuple lib;
     final results = <LibraryTuple>[];
 
     if(_libraries.containsKey(path)) {
       results.add(_libraries[path]);
     } else {
       final astUnit = parseDartFile(path);
-      var lib = new LibraryTuple._(astUnit, path);
+      lib = new LibraryTuple._(astUnit, path);
+
+      if (deep && librariesToInclude.contains(lib.name)) {
+        deep = false;
+      }
 
       astUnit.directives
         .where((directive) => directive is PartDirective)
@@ -101,7 +111,11 @@ class _SourceCrawler implements SourceCrawler {
       .forEach((UriBasedDirective import) {
         final path = _getFileLocation(import.uri.stringValue, results.first.path);
         if(path != null) {
-          results.addAll(this.crawl(path, true));
+          List<LibraryTuple> crawled = this.crawl(path, true);
+          if (lib != null && crawled.isNotEmpty) {
+            lib.imports.add(crawled.first);
+          }
+          results.addAll(crawled);
         }
       });
 

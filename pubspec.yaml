@@ -1,4 +1,4 @@
-name: calzone_analysis
+name: calzone_source_crawler
 description: A set of utility classes to make common use cases of using the Dart analyzer.
 version: 0.0.1-alpha.1
 homepage: https://github.com/matanlurey/analysis
